@@ -1,7 +1,11 @@
 import 'package:double_bogey_flutter/call/membershipCalls.dart';
+import 'package:double_bogey_flutter/data/local.dart';
+import 'package:double_bogey_flutter/screens/BookMembershipPage/bookMembershipPage.dart';
 import 'package:flutter/material.dart';
+import '../../../call/paymentCalls.dart';
 import '../../../models/membershipType.dart';
-import '../../Common/alertDialogWidget.dart';
+import '../../BookBoxPage/widgets/VivawalletWebviewWidget.dart';
+import '../../ErrorPage/ErrorPage.dart';
 
 class MembershipTypeCardWidget extends StatefulWidget {
   final MembershipType membershipType;
@@ -19,14 +23,18 @@ class _MembershipTypeCardWidgetState extends State<MembershipTypeCardWidget> {
   int membershipId = 0;
   int sessionLeft = 0;
   bool _visible = false;
+  late Future<int> newMemberhsipId;
+  late Future<String> orderCode;
 
   @override
   void initState() {
     oMembershipType = widget.membershipType;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await GetMembershipInfo();
-      print(membershipId);
-      print(sessionLeft);
+      if (isLoggedIn) {
+        await GetMembershipInfo();
+        print(membershipId);
+        print(sessionLeft);
+      }
       _visible = true;
       setState(() {});
     });
@@ -46,7 +54,28 @@ class _MembershipTypeCardWidgetState extends State<MembershipTypeCardWidget> {
   @override
   Widget build(BuildContext context) {
     print("widget card");
-    if (membershipId == 0) {
+    if (!isLoggedIn) {
+      return AnimatedOpacity(
+          opacity: _visible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 1000),
+          child: Card(
+            color: Colors.lightBlue,
+            child: ListTile(
+                title: Text(oMembershipType.name),
+                subtitle: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(oMembershipType.description),
+                    Text(
+                        "${oMembershipType.peopleMax} personne(s) - ${oMembershipType.length} heure(s)"),
+                    Text("${oMembershipType.maxPerWeek} x par semaine"),
+                    Text("Prix ${oMembershipType.price}")
+                  ],
+                ),),
+          ));
+    }
+    if (membershipId == 0 || !isLoggedIn) {
       return AnimatedOpacity(
         opacity: _visible ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 1000),
@@ -65,18 +94,28 @@ class _MembershipTypeCardWidgetState extends State<MembershipTypeCardWidget> {
                   Text("Prix ${oMembershipType.price}")
                 ],
               ),
-              onTap: () => {
-                    showDialog<String>(
-                        context: context,
-                        builder: (BuildContext context) =>
-                            const AlertDialogWidget(
-                              title: 'Confirmation',
-                              content:
-                                  'Confirmer la demande d\'abonnement? Si vous acceptez vous serez dirigé vers la page de paiement.',
-                            ))
-                  }),
-        ),
-      );
+              onTap: () =>
+              {
+                newMemberhsipId = createMembership(oMembershipType.id),
+                newMemberhsipId.then((value) =>
+                {
+                  print("Payment en ligne"),
+                  print("Membership id: $value"),
+                  orderCode = createPaymentMembership(value),
+                  orderCode.then((value) async =>
+                  {
+                    await Navigator.push(context, MaterialPageRoute(builder: (
+                        context) =>
+                        VivawalletWebviewWidget(orderCode: value,))),
+                    Navigator.pop(context),
+                  })
+                }).catchError((error) {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => ErrorPage()));
+                }
+                ),
+              }),
+      ));
     }
     if (sessionLeft > 0) {
       return AnimatedOpacity(
@@ -97,6 +136,9 @@ class _MembershipTypeCardWidgetState extends State<MembershipTypeCardWidget> {
                 Text("Membre. Session(s) restante(s) $sessionLeft")
               ],
             ),
+            onTap: () => {
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) => BookMembershipPage(membershipPeople: oMembershipType.peopleMax, membershipLength: oMembershipType.length, membershipId: membershipId,)))
+            },
           ),
         ),
       );

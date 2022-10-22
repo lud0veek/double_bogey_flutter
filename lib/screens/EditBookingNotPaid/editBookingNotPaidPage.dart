@@ -1,36 +1,32 @@
 import 'package:double_bogey_flutter/call/bookingCalls.dart';
 import 'package:double_bogey_flutter/call/simulatorCalls.dart';
 import 'package:double_bogey_flutter/models/booking.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/DatePickerWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/LengthSliderWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/PeopleSliderWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/RadioPaymentWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/RadioTypeWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/VivawalletWebviewWidget.dart';
+import 'package:double_bogey_flutter/screens/EditBookingNotPaid/widgets/EditBNPDatePickerWidget.dart';
+import 'package:double_bogey_flutter/screens/EditBookingNotPaid/widgets/EditBNPLengthSliderWidget.dart';
+import 'package:double_bogey_flutter/screens/EditBookingNotPaid/widgets/EditBNPMembershipRadioTypeWidget.dart';
+import 'package:double_bogey_flutter/screens/EditBookingNotPaid/widgets/EditBNPPeopleSliderWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../call/paymentCalls.dart';
 import '../../models/Simulator.dart';
-import '../ErrorPage/ErrorPage.dart';
 
 var formatter = DateFormat('dd-MM-yyyy');
 final _formKey = GlobalKey<FormState>();
 
-class BookBoxPage extends StatefulWidget {
-  const BookBoxPage({Key? key}) : super(key: key);
-
+class EditBookingNotPaidPage extends StatefulWidget {
+  final Booking oBooking;
+  const EditBookingNotPaidPage({Key? key, required this.oBooking}) : super(key: key);
   @override
-  State<BookBoxPage> createState() => _BookBoxPageState();
+  State<EditBookingNotPaidPage> createState() => _EditBookingNotPaidPage();
 }
 
-class _BookBoxPageState extends State<BookBoxPage> {
+class _EditBookingNotPaidPage extends State<EditBookingNotPaidPage> {
   //Variables for comment input
   final controllerComment = TextEditingController();
   String commentInput = '';
 
   //Form's variables
   DateTime _datePickerSelectedValue = DateTime.now();
-  late String _radioPaymentSelectedValue = "online";
+  final String _radioPaymentSelectedValue = "cash";
   late String _radioTypeSelectedValue = "golf";
   late int _peopleSliderSelectedValue = 1;
   late int _lengthSliderSelectedValue = 1;
@@ -43,10 +39,16 @@ class _BookBoxPageState extends State<BookBoxPage> {
   String? _selectedSlotItem;
   bool _isLoadingSlots = false;
 
+  late Booking booking;
+  late String comment;
+
   @override
   void initState() {
     super.initState();
     setSimulators();
+    booking = widget.oBooking;
+    controllerComment.text = widget.oBooking.comment!;
+    _datePickerSelectedValue = booking.date;
   }
 
   //Function to load simulators list
@@ -61,8 +63,8 @@ class _BookBoxPageState extends State<BookBoxPage> {
               box.name,
               style: const TextStyle(color: Colors.blue),
             )));
+        if (box.id == booking.simulatorId){_selectedBoxItem = box;}
       }
-      _selectedBoxItem = _dropdownBoxItems[0].value;
     });
     setSlots();
     setState(() {});
@@ -72,8 +74,8 @@ class _BookBoxPageState extends State<BookBoxPage> {
   void setSlots() async {
     _isLoadingSlots = true;
     _dropdownSlotItems.clear();
-    await getAvailability(_selectedBoxItem!.id, _datePickerSelectedValue,
-            _lengthSliderSelectedValue)
+    await getAvailabilityEdit(_selectedBoxItem!.id, _datePickerSelectedValue,
+        _lengthSliderSelectedValue, booking.id!)
         .then((value) {
       List<String> slots = value;
       if (slots.isNotEmpty) {
@@ -84,8 +86,9 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 slot,
                 style: const TextStyle(color: Colors.blue),
               )));
+          if (slot == booking.startTime.toString()){_selectedSlotItem = slot;}
         }
-        _selectedSlotItem = _dropdownSlotItems[0].value;
+        _selectedSlotItem ??= _dropdownSlotItems[0].value;
       }
     });
     setState(() {});
@@ -115,10 +118,10 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 ),
                 const Text("Type de session",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
-                RadioTypeWidget(
+                EditBNPRadioTypeWidget(
                   callback: (val) => setState(() {
                     _radioTypeSelectedValue = val;
-                  }),
+                  }), type: booking.type,
                 ),
                 const SizedBox(
                   height: 15,
@@ -128,32 +131,32 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 const SizedBox(
                   height: 5,
                 ),
-                DatePickerWidget(
+                EditBNPDatePickerWidget(
                   callback: (val) => setState(() {
                     _datePickerSelectedValue = DateTime.parse(val);
                     setSlots();
-                  }),
+                  }), date: booking.date,
                 ),
                 const SizedBox(
                   height: 5,
                 ),
                 const Text("Nombre de joueurs",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
-                PeopleSliderWidget(
+                EditBNPPeopleSliderWidget(
                   callback: (val) => setState(() {
                     _peopleSliderSelectedValue = val;
-                  }),
+                  }), people: booking.people,
                 ),
                 const SizedBox(
                   height: 5,
                 ),
                 const Text("Nombre d'heure(s)",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
-                LengthSliderWidget(
+                EditBNPLengthSliderWidget(
                   callback: (val) => setState(() {
                     _lengthSliderSelectedValue = val;
                     setSlots();
-                  }),
+                  }), length: booking.length,
                 ),
                 const SizedBox(
                   height: 5,
@@ -215,7 +218,7 @@ class _BookBoxPageState extends State<BookBoxPage> {
                   child: TextFormField(
                     controller: controllerComment,
                     decoration:
-                        const InputDecoration(border: UnderlineInputBorder()),
+                    const InputDecoration(border: UnderlineInputBorder()),
                     validator: (value) {
                       if (value!.length > 250){
                         return "Le commentaire ne doit pas excéder 250 charactères";
@@ -225,17 +228,6 @@ class _BookBoxPageState extends State<BookBoxPage> {
                   ),
                 ),
                 const SizedBox(
-                  height: 15,
-                ),
-                const Text("Payement",
-                    style: TextStyle(color: Colors.black, fontSize: 17)),
-                RadioPaymentWidget(
-                  callback: (val) => setState(() {
-                    _radioPaymentSelectedValue = val;
-                    print(val);
-                  }),
-                ),
-                const SizedBox(
                   height: 5,
                 ),
                 ElevatedButton(
@@ -243,7 +235,7 @@ class _BookBoxPageState extends State<BookBoxPage> {
                     if (_formKey.currentState!.validate()){
                       print(_radioPaymentSelectedValue);
                       Booking oBooking = Booking(
-                          0,
+                        booking.id,
                           _radioPaymentSelectedValue,
                           _radioTypeSelectedValue,
                           _peopleSliderSelectedValue,
@@ -253,40 +245,21 @@ class _BookBoxPageState extends State<BookBoxPage> {
                           controllerComment.text,
                           _datePickerSelectedValue,
                           _selectedSlotItem.toString());
-                      if(_radioPaymentSelectedValue != "online") {
-                        Future bookingId = createBooking(oBooking);
+                        Future bookingId = editBookingNP(oBooking);
                         bookingId.then((value) =>{
-                          print("Payment cash"),
-                          print("Booking id: $value"),
-                          Navigator.pop(context),
-                        ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                        content: Text('Réservation validée'),
-                          backgroundColor: Colors.green,
-                        ))
+                          Navigator.of(context).popUntil((route) => route.isFirst),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Réservation éditée'),
+                                backgroundColor: Colors.green,
+                              ))
                         }).catchError((error) {
-                          print("Cannot create booking");
+                          print("Cannot edit booking");
                           throw error;
                         });
-                      }
-                      else{
-                        Future bookingId = createBooking(oBooking);
-                        Future orderCode;
-                        bookingId.then((value) =>{
-                        print("Payment en ligne"),
-                        print("Booking id: $value"),
-                          orderCode = createPaymentBooking(value),
-                          orderCode.then((value) async => {
-                        await Navigator.push(context, MaterialPageRoute(builder: (context) => VivawalletWebviewWidget(orderCode: value,))),
-                            Navigator.pop(context),
-                          })
-                        }).catchError((error) {
-                          return ErrorPage();
-                        });
-                      }
                     }
-                    },
-                  child: const Text("Réserver"),
+                  },
+                  child: const Text("editer"),
                 )
               ]),
         ),

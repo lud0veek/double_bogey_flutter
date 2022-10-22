@@ -1,15 +1,19 @@
 import 'dart:io';
 import 'package:double_bogey_flutter/screens/BookBoxPage/bookBoxPage.dart';
+import 'package:double_bogey_flutter/screens/CreateUser/createUserPage.dart';
 import 'package:double_bogey_flutter/screens/EventPage/eventPage.dart';
 import 'package:double_bogey_flutter/screens/GamingPage/gamingPage.dart';
+import 'package:double_bogey_flutter/screens/MyAccountPage/ViewMyAccountPage.dart';
 import 'package:double_bogey_flutter/screens/MyBookingsPage/myBookingsPage.dart';
 import 'package:double_bogey_flutter/screens/GolfPage/golfPage.dart';
 import 'package:double_bogey_flutter/screens/HomePage/homePage.dart';
+import 'package:double_bogey_flutter/screens/ResetPasswordPage/resetPasswordPage.dart';
 import 'package:double_bogey_flutter/screens/wheelPage.dart';
 import 'package:flutter/material.dart';
 import 'package:double_bogey_flutter/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 //Main definition
 void main() {
@@ -40,6 +44,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     initAction();
+    WidgetsFlutterBinding.ensureInitialized();
     name = '';
     super.initState();
   }
@@ -55,6 +60,15 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('fr')
+        ],
       theme: ThemeData(
         textTheme: GoogleFonts.ubuntuTextTheme(),
       ),
@@ -62,7 +76,17 @@ class _MyAppState extends State<MyApp> {
       home: Builder(
         builder: (context) => Scaffold(
           key: _scaffoldKey,
-          appBar: AppBar(backgroundColor: Colors.black,title: Text(_title, style: TextStyle(fontSize: 15, color: Colors.white),),),
+          appBar: AppBar(backgroundColor: Colors.black,title: Row(
+            children: [
+              Image.asset(
+                'media/img/db-logo.png',
+                height: 65,
+                width: 65,
+              ),
+              const SizedBox(width: 15),
+              Text(_title, style: const TextStyle(fontSize: 15, color: Colors.white),),
+            ],
+          ),),
           drawer: Drawer(
             width: 200,
             child: ListView(
@@ -81,14 +105,31 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ),
                   if (!isLoggedIn)
-                  const ListTile(
-                    title: Text("Créer un compte"),
+                  ListTile(
+                    title: const Text("Créer un compte"),
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateUserPage()));
+                        toggleDrawer();}
                   ),
                   if (!isLoggedIn)
                   ListTile(
                     title: const Text("Se connecter"),
                     onTap: () => loginAction(),
                   ),
+                  if (!isLoggedIn)
+                  ListTile(
+                      title: const Text("Réinitialiser mot de passe"),
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ResetPasswordPage()));
+                        toggleDrawer();}
+                  ),
+                  if (isLoggedIn)
+                    ListTile(
+                        title: const Text("Mon compte"),
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewMyAccountPage()));
+                          toggleDrawer();}
+                    ),
                   if (isLoggedIn)
                     ListTile(
                     title: const Text("Mes réservation"),
@@ -102,12 +143,6 @@ class _MyAppState extends State<MyApp> {
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(builder: (context) => const BookBoxPage()));
                       toggleDrawer();},
-                  ),
-                  ListTile(
-                    title: const Text("Golf Wheel"),
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const WheelPage()));
-                      toggleDrawer();}
                   ),
                   if (isLoggedIn)
                   const Divider(),

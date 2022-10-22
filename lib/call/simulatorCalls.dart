@@ -53,3 +53,26 @@ Future<List<String>> getAvailability(int simulatorId, DateTime dateTime, int len
     throw Exception("Failed to load slots");
   }
 }
+
+Future<List<String>> getAvailabilityEdit(int simulatorId, DateTime dateTime, int length, int bookingId) async {
+  var formatter = DateFormat('yyyy-MM-dd');
+  var date = formatter.format(dateTime);
+  final response = await http.Client().post(
+    Uri.https(apiUrl, '/api/simulators/availability/$simulatorId'),
+    body: jsonEncode(<String, String>{'Day': date, 'Length': length.toString(), 'SimulatorId': simulatorId.toString(), 'id': bookingId.toString()}),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },);
+  if (response.statusCode == 200) {
+    List<String> oSlots = [];
+    var content = jsonDecode(response.body)['listOfSlots'];
+    for (int i = 0; i < content.length; i++){
+
+      oSlots.add(content[i]["slot"].toString());
+    }
+    return oSlots;
+  }
+  else {
+    throw Exception("Failed to load slots");
+  }
+}

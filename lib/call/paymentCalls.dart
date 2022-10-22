@@ -21,6 +21,24 @@ Future<String> createPaymentBooking(int bookingId) async {
   }
 }
 
+Future<String> createPaymentMembership(int membershipId) async {
+  final String accessToken = AuthService.instance.auth0AccessToken.toString();
+  final response = await http.Client().post(
+    Uri.https(apiUrl, '/api/payments/'),
+    body: jsonEncode(<String, String>{'membershipId': membershipId.toString()}),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',"Authorization": "Bearer $accessToken",
+    },);
+  if (response.statusCode == 200) {
+    String ordercode = response.body;
+    ordercode = ordercode.replaceAll("\"", "");
+    return ordercode;
+  }
+  else {
+    throw Exception("Failed to create payment");
+  }
+}
+
 Future updatePayment(String transactionId) async {
   final String accessToken = AuthService.instance.auth0AccessToken.toString();
   final response = await http.Client().put(

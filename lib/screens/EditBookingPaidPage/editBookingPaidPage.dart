@@ -1,12 +1,11 @@
 import 'package:double_bogey_flutter/call/bookingCalls.dart';
 import 'package:double_bogey_flutter/call/simulatorCalls.dart';
 import 'package:double_bogey_flutter/models/booking.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/DatePickerWidget.dart';
 import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/LengthSliderWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/PeopleSliderWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/RadioPaymentWidget.dart';
-import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/RadioTypeWidget.dart';
 import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/VivawalletWebviewWidget.dart';
+import 'package:double_bogey_flutter/screens/EditBookingPaidPage/widgets/EditBPDatePickerWidget.dart';
+import 'package:double_bogey_flutter/screens/EditBookingPaidPage/widgets/EditBPLengthSliderWidget.dart';
+import 'package:double_bogey_flutter/screens/EditBookingPaidPage/widgets/EditBPPeopleSliderWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../call/paymentCalls.dart';
@@ -16,14 +15,15 @@ import '../ErrorPage/ErrorPage.dart';
 var formatter = DateFormat('dd-MM-yyyy');
 final _formKey = GlobalKey<FormState>();
 
-class BookBoxPage extends StatefulWidget {
-  const BookBoxPage({Key? key}) : super(key: key);
+class EditBookingPaidPage extends StatefulWidget {
+  final Booking oBooking;
+  const EditBookingPaidPage({Key? key, required this.oBooking}) : super(key: key);
 
   @override
-  State<BookBoxPage> createState() => _BookBoxPageState();
+  State<EditBookingPaidPage> createState() => _EditBookingPaidPage();
 }
 
-class _BookBoxPageState extends State<BookBoxPage> {
+class _EditBookingPaidPage extends State<EditBookingPaidPage> {
   //Variables for comment input
   final controllerComment = TextEditingController();
   String commentInput = '';
@@ -43,10 +43,16 @@ class _BookBoxPageState extends State<BookBoxPage> {
   String? _selectedSlotItem;
   bool _isLoadingSlots = false;
 
+  late Booking booking;
+
   @override
   void initState() {
     super.initState();
     setSimulators();
+    booking = widget.oBooking;
+    _radioTypeSelectedValue = widget.oBooking.type;
+    _datePickerSelectedValue = widget.oBooking.date;
+    controllerComment.text = booking.comment!;
   }
 
   //Function to load simulators list
@@ -61,8 +67,8 @@ class _BookBoxPageState extends State<BookBoxPage> {
               box.name,
               style: const TextStyle(color: Colors.blue),
             )));
+        if (box.id == booking.simulatorId){_selectedBoxItem = box;}
       }
-      _selectedBoxItem = _dropdownBoxItems[0].value;
     });
     setSlots();
     setState(() {});
@@ -72,8 +78,8 @@ class _BookBoxPageState extends State<BookBoxPage> {
   void setSlots() async {
     _isLoadingSlots = true;
     _dropdownSlotItems.clear();
-    await getAvailability(_selectedBoxItem!.id, _datePickerSelectedValue,
-            _lengthSliderSelectedValue)
+    await getAvailabilityEdit(_selectedBoxItem!.id, _datePickerSelectedValue,
+            _lengthSliderSelectedValue, booking.id!)
         .then((value) {
       List<String> slots = value;
       if (slots.isNotEmpty) {
@@ -84,8 +90,9 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 slot,
                 style: const TextStyle(color: Colors.blue),
               )));
+          if (slot == booking.startTime.toString()){_selectedSlotItem = slot;}
         }
-        _selectedSlotItem = _dropdownSlotItems[0].value;
+        _selectedSlotItem ??= _dropdownSlotItems[0].value;
       }
     });
     setState(() {});
@@ -113,47 +120,37 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 const SizedBox(
                   height: 15,
                 ),
-                const Text("Type de session",
-                    style: TextStyle(color: Colors.black, fontSize: 17)),
-                RadioTypeWidget(
-                  callback: (val) => setState(() {
-                    _radioTypeSelectedValue = val;
-                  }),
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
                 const Text("Sélectionnez une date",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
                 const SizedBox(
                   height: 5,
                 ),
-                DatePickerWidget(
+                EditBPDatePickerWidget(
                   callback: (val) => setState(() {
                     _datePickerSelectedValue = DateTime.parse(val);
                     setSlots();
-                  }),
+                  }), date: widget.oBooking.date,
                 ),
                 const SizedBox(
                   height: 5,
                 ),
                 const Text("Nombre de joueurs",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
-                PeopleSliderWidget(
+                EditBPPeopleSliderWidget(
                   callback: (val) => setState(() {
                     _peopleSliderSelectedValue = val;
-                  }),
+                  }), people: widget.oBooking.people,
                 ),
                 const SizedBox(
                   height: 5,
                 ),
                 const Text("Nombre d'heure(s)",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
-                LengthSliderWidget(
+                EditBPLengthSliderWidget(
                   callback: (val) => setState(() {
                     _lengthSliderSelectedValue = val;
                     setSlots();
-                  }),
+                  }), length: widget.oBooking.length,
                 ),
                 const SizedBox(
                   height: 5,
@@ -225,17 +222,6 @@ class _BookBoxPageState extends State<BookBoxPage> {
                   ),
                 ),
                 const SizedBox(
-                  height: 15,
-                ),
-                const Text("Payement",
-                    style: TextStyle(color: Colors.black, fontSize: 17)),
-                RadioPaymentWidget(
-                  callback: (val) => setState(() {
-                    _radioPaymentSelectedValue = val;
-                    print(val);
-                  }),
-                ),
-                const SizedBox(
                   height: 5,
                 ),
                 ElevatedButton(
@@ -243,7 +229,7 @@ class _BookBoxPageState extends State<BookBoxPage> {
                     if (_formKey.currentState!.validate()){
                       print(_radioPaymentSelectedValue);
                       Booking oBooking = Booking(
-                          0,
+                          widget.oBooking.id,
                           _radioPaymentSelectedValue,
                           _radioTypeSelectedValue,
                           _peopleSliderSelectedValue,
@@ -253,8 +239,7 @@ class _BookBoxPageState extends State<BookBoxPage> {
                           controllerComment.text,
                           _datePickerSelectedValue,
                           _selectedSlotItem.toString());
-                      if(_radioPaymentSelectedValue != "online") {
-                        Future bookingId = createBooking(oBooking);
+                        Future bookingId = editBookingP(oBooking);
                         bookingId.then((value) =>{
                           print("Payment cash"),
                           print("Booking id: $value"),
@@ -268,22 +253,6 @@ class _BookBoxPageState extends State<BookBoxPage> {
                           print("Cannot create booking");
                           throw error;
                         });
-                      }
-                      else{
-                        Future bookingId = createBooking(oBooking);
-                        Future orderCode;
-                        bookingId.then((value) =>{
-                        print("Payment en ligne"),
-                        print("Booking id: $value"),
-                          orderCode = createPaymentBooking(value),
-                          orderCode.then((value) async => {
-                        await Navigator.push(context, MaterialPageRoute(builder: (context) => VivawalletWebviewWidget(orderCode: value,))),
-                            Navigator.pop(context),
-                          })
-                        }).catchError((error) {
-                          return ErrorPage();
-                        });
-                      }
                     }
                     },
                   child: const Text("Réserver"),

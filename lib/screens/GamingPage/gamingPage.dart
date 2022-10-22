@@ -2,6 +2,9 @@ import 'package:double_bogey_flutter/screens/BookBoxPage/bookBoxPage.dart';
 import 'package:double_bogey_flutter/screens/MembershipTypePage/membershipTypePage.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/local.dart';
+import '../notLoggedPage.dart';
+
 class GamingPage extends StatelessWidget{
   const GamingPage({Key? key}) : super(key: key);
 
@@ -22,7 +25,10 @@ class GamingPage extends StatelessWidget{
                     children: [
                       ElevatedButton(style: ElevatedButton.styleFrom(fixedSize: const Size(125, 1),primary: Colors.blue),onPressed: () async {Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MembershipTypePage()));}, child: const Text("Abonnements",style: TextStyle(fontSize: 14),),),
                       const SizedBox(width: 60,),
-                      ElevatedButton(style: ElevatedButton.styleFrom(fixedSize: const Size(125, 1),primary: Colors.blue),onPressed: () async {Navigator.of(context).push(MaterialPageRoute(builder: (context) => const BookBoxPage()));}, child: const Text("Réserver",style: TextStyle(fontSize: 14),),)
+                      ElevatedButton(style: ElevatedButton.styleFrom(fixedSize: const Size(125, 1),primary: Colors.blue),onPressed: () async {
+                        if (isLoggedIn) {Navigator.of(context).push(MaterialPageRoute(builder: (context) => const BookBoxPage()));}
+                      else {Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NotLoggedPage()));}}
+                        , child: const Text("Réserver",style: TextStyle(fontSize: 14),),)
                     ],
                   ),
                   const SizedBox(height: 20,),

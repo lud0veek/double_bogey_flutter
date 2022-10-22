@@ -3,8 +3,15 @@ import '../../call/eventCalls.dart';
 import '../../models/event.dart';
 import 'eventListWidget.dart';
 
-class EventPage extends StatelessWidget{
+class EventPage extends StatefulWidget{
   const EventPage({Key? key}) : super(key: key);
+
+  @override
+  State<EventPage> createState() => _EventPageState();
+}
+
+class _EventPageState extends State<EventPage> {
+
   @override
   Widget build(BuildContext context){
     return Scaffold(

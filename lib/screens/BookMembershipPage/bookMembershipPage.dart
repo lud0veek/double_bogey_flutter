@@ -7,6 +7,9 @@ import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/PeopleSliderWid
 import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/RadioPaymentWidget.dart';
 import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/RadioTypeWidget.dart';
 import 'package:double_bogey_flutter/screens/BookBoxPage/widgets/VivawalletWebviewWidget.dart';
+import 'package:double_bogey_flutter/screens/BookMembershipPage/widgets/MembershipDatePickerWidget.dart';
+import 'package:double_bogey_flutter/screens/BookMembershipPage/widgets/MembershipLengthSliderWidget.dart';
+import 'package:double_bogey_flutter/screens/BookMembershipPage/widgets/MembershipPeopleSliderWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../call/paymentCalls.dart';
@@ -16,22 +19,25 @@ import '../ErrorPage/ErrorPage.dart';
 var formatter = DateFormat('dd-MM-yyyy');
 final _formKey = GlobalKey<FormState>();
 
-class BookBoxPage extends StatefulWidget {
-  const BookBoxPage({Key? key}) : super(key: key);
+class BookMembershipPage extends StatefulWidget {
+  final int membershipLength;
+  final int membershipPeople;
+  final int membershipId;
+
+  const BookMembershipPage({Key? key, required this.membershipLength, required this.membershipPeople, required this.membershipId}) : super(key: key);
 
   @override
-  State<BookBoxPage> createState() => _BookBoxPageState();
+  State<BookMembershipPage> createState() => _BookMembershipPageState();
 }
 
-class _BookBoxPageState extends State<BookBoxPage> {
+class _BookMembershipPageState extends State<BookMembershipPage> {
   //Variables for comment input
   final controllerComment = TextEditingController();
   String commentInput = '';
 
   //Form's variables
   DateTime _datePickerSelectedValue = DateTime.now();
-  late String _radioPaymentSelectedValue = "online";
-  late String _radioTypeSelectedValue = "golf";
+  final String _radioTypeSelectedValue = "membership";
   late int _peopleSliderSelectedValue = 1;
   late int _lengthSliderSelectedValue = 1;
 
@@ -113,22 +119,12 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 const SizedBox(
                   height: 15,
                 ),
-                const Text("Type de session",
-                    style: TextStyle(color: Colors.black, fontSize: 17)),
-                RadioTypeWidget(
-                  callback: (val) => setState(() {
-                    _radioTypeSelectedValue = val;
-                  }),
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
                 const Text("Sélectionnez une date",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
                 const SizedBox(
                   height: 5,
                 ),
-                DatePickerWidget(
+                MembershipDatePickerWidget(
                   callback: (val) => setState(() {
                     _datePickerSelectedValue = DateTime.parse(val);
                     setSlots();
@@ -139,21 +135,21 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 ),
                 const Text("Nombre de joueurs",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
-                PeopleSliderWidget(
+                MembershipPeopleSliderWidget(
                   callback: (val) => setState(() {
                     _peopleSliderSelectedValue = val;
-                  }),
+                  }), people: widget.membershipPeople,
                 ),
                 const SizedBox(
                   height: 5,
                 ),
                 const Text("Nombre d'heure(s)",
                     style: TextStyle(color: Colors.black, fontSize: 17)),
-                LengthSliderWidget(
+                MembershipLengthSliderWidget(
                   callback: (val) => setState(() {
                     _lengthSliderSelectedValue = val;
                     setSlots();
-                  }),
+                  }), length: widget.membershipLength,
                 ),
                 const SizedBox(
                   height: 5,
@@ -227,38 +223,28 @@ class _BookBoxPageState extends State<BookBoxPage> {
                 const SizedBox(
                   height: 15,
                 ),
-                const Text("Payement",
-                    style: TextStyle(color: Colors.black, fontSize: 17)),
-                RadioPaymentWidget(
-                  callback: (val) => setState(() {
-                    _radioPaymentSelectedValue = val;
-                    print(val);
-                  }),
-                ),
                 const SizedBox(
                   height: 5,
                 ),
                 ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()){
-                      print(_radioPaymentSelectedValue);
                       Booking oBooking = Booking(
                           0,
-                          _radioPaymentSelectedValue,
-                          _radioTypeSelectedValue,
+                          "membership",
+                          "membership",
                           _peopleSliderSelectedValue,
                           _lengthSliderSelectedValue,
                           _selectedBoxItem!.id,
-                          null,
+                          widget.membershipId,
                           controllerComment.text,
                           _datePickerSelectedValue,
                           _selectedSlotItem.toString());
-                      if(_radioPaymentSelectedValue != "online") {
                         Future bookingId = createBooking(oBooking);
                         bookingId.then((value) =>{
-                          print("Payment cash"),
+                          print("Membership"),
                           print("Booking id: $value"),
-                          Navigator.pop(context),
+                          Navigator.of(context).popUntil((route) => route.isFirst),
                         ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                         content: Text('Réservation validée'),
@@ -268,22 +254,6 @@ class _BookBoxPageState extends State<BookBoxPage> {
                           print("Cannot create booking");
                           throw error;
                         });
-                      }
-                      else{
-                        Future bookingId = createBooking(oBooking);
-                        Future orderCode;
-                        bookingId.then((value) =>{
-                        print("Payment en ligne"),
-                        print("Booking id: $value"),
-                          orderCode = createPaymentBooking(value),
-                          orderCode.then((value) async => {
-                        await Navigator.push(context, MaterialPageRoute(builder: (context) => VivawalletWebviewWidget(orderCode: value,))),
-                            Navigator.pop(context),
-                          })
-                        }).catchError((error) {
-                          return ErrorPage();
-                        });
-                      }
                     }
                     },
                   child: const Text("Réserver"),

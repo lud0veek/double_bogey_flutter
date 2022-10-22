@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../../data/local.dart';
 
 class GolfPage extends StatelessWidget{
+  const GolfPage({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +23,9 @@ class GolfPage extends StatelessWidget{
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ElevatedButton(style: ElevatedButton.styleFrom(fixedSize: const Size(125, 1),primary: Colors.blue),onPressed: () async {Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MembershipTypePage()));}, child: const Text("Abonnements", style: TextStyle(fontSize: 14),),),
+                    ElevatedButton(style: ElevatedButton.styleFrom(fixedSize: const Size(125, 1),primary: Colors.blue),onPressed: () async {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MembershipTypePage()));}
+                      , child: const Text("Abonnements", style: TextStyle(fontSize: 14),),),
                     const SizedBox(width: 60,),
                     ElevatedButton(style: ElevatedButton.styleFrom(fixedSize: const Size(125, 1),primary: Colors.blue),
                       onPressed: () async {

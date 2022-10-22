@@ -1,8 +1,9 @@
 import 'package:double_bogey_flutter/call/bookingCalls.dart';
 import 'package:double_bogey_flutter/models/booking.dart';
+import 'package:double_bogey_flutter/screens/EditBookingNotPaid/editBookingNotPaidPage.dart';
+import 'package:double_bogey_flutter/screens/EditBookingPaidPage/editBookingPaidPage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../models/event.dart';
 
 class MyBookingsListWidget extends StatefulWidget {
   final List<Booking> bookings;
@@ -27,15 +28,42 @@ class _MyBookingsListWidgetState extends State<MyBookingsListWidget> {
             children: [
               if (booking.date.compareTo(
                       DateTime.now().subtract(const Duration(days: -1))) >=
-                  0)
-                const Icon(Icons.edit),
+                  0 && booking.isPaid == true)
+                IconButton(
+                    onPressed: () => {
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EditBookingPaidPage(oBooking: booking,),
+                    ),
+                    )},
+                    icon: const Icon(
+                      Icons.edit,
+                      color: Colors.blue,
+                    )),
+              const SizedBox(
+                width: 20,
+              ),
+              if (booking.date.compareTo(
+                  DateTime.now().subtract(const Duration(days: -1))) >=
+                  0 && booking.isPaid == false)
+                IconButton(
+                    onPressed: () => {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => EditBookingNotPaidPage(oBooking: booking,),
+                        ),
+                      )},
+                    icon: const Icon(
+                      Icons.edit,
+                      color: Colors.blue,
+                    )),
               const SizedBox(
                 width: 20,
               ),
               if (booking.date.compareTo(
                           DateTime.now().subtract(const Duration(days: -1))) >=
                       0 &&
-                  booking.isPaid == false)
+                  (booking.isPaid == false || booking.type == "membership"))
                 IconButton(
                     onPressed: () => {
                           removeBooking(bookingId),
@@ -56,7 +84,7 @@ class _MyBookingsListWidgetState extends State<MyBookingsListWidget> {
             "Le ${dateFormatter.format(booking.date)} à ${booking.startTime} - ${booking.type}",
             style: const TextStyle(
               color: Colors.blue,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.bold, fontSize: 15
             ),
           ),
           subtitle: Column(

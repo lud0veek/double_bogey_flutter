@@ -9,13 +9,14 @@ class Booking{
   final String startTime;
   int? simulatorId;
   int? roomId;
+  int? membershipId;
   String? comment;
   String? billing;
   int? price;
   bool? isPaid;
   bool? isValid;
 
-  Booking(this.billing, this.type, this.people, this.length, this.simulatorId, this.comment, this.date, this.startTime);
+  Booking(this.id, this.billing, this.type, this.people, this.length, this.simulatorId, this.membershipId, this.comment, this.date, this.startTime);
 
   Booking.fromJson(Map<String, dynamic> json)
       : id = json['id'] as int?,
@@ -24,6 +25,7 @@ class Booking{
         people = json['people'] as int,
         length = json['length'] as int,
         roomId = json['roomId'] as int?,
+        membershipId = json['membershipId'] as int?,
         simulatorId = json['simulatorId'] as int?,
         comment = json['comment'] as String?,
         price = json['price'] as int,
@@ -41,6 +43,7 @@ class Booking{
     'length': length,
     'simulatorId': simulatorId,
     'roomId': roomId,
+    'membershipId': membershipId,
     'comment': comment,
     'billing': billing,
     'price': price,

@@ -34,6 +34,42 @@ Future<int> createBooking(Booking booking) async{
   }
 }
 
+Future<bool> editBookingNP(Booking booking) async{
+  booking.isPaid = false;
+  booking.isValid = true;
+  booking.price = 0;
+  final String accessToken = AuthService.instance.auth0AccessToken.toString();
+  print(jsonEncode(booking));
+  final response = await http.Client().put(Uri.https(apiUrl, '/api/bookings/${booking.id}'),
+      headers: {"Content-type" : "application/json", "Authorization": "Bearer $accessToken",},
+      body: jsonEncode(booking)
+  );
+  if (response.statusCode == 204){
+    return true;
+  }
+  else{
+    throw Exception('Failed to edit booking');
+  }
+}
+
+Future<bool> editBookingP(Booking booking) async{
+  booking.isPaid = true;
+  booking.isValid = true;
+  booking.price = 0;
+  final String accessToken = AuthService.instance.auth0AccessToken.toString();
+  print(jsonEncode(booking));
+  final response = await http.Client().put(Uri.https(apiUrl, '/api/bookings/${booking.id}'),
+      headers: {"Content-type" : "application/json", "Authorization": "Bearer $accessToken",},
+      body: jsonEncode(booking)
+  );
+  if (response.statusCode == 204){
+    return true;
+  }
+  else{
+    throw Exception('Failed to edit booking');
+  }
+}
+
 Future removeBooking(int bookingId) async{
   final String accessToken = AuthService.instance.auth0AccessToken.toString();
   final response = await http.Client().delete(Uri.https(apiUrl, '/api/bookings/$bookingId'),

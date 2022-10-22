@@ -6,10 +6,9 @@ import '../data/local.dart';
 import '../services/auth_service.dart';
 
 Future<List<MembershipType>> getVisibleMembershipTypes() async {
-  final String accessToken = AuthService.instance.auth0AccessToken.toString();
+  //final String accessToken = AuthService.instance.auth0AccessToken.toString();
   final response = await http.Client().get(
-    Uri.https(apiUrl, '/api/membershiptypes/visible'),
-    headers: {"Content-type" : "application/json", "Authorization": "Bearer $accessToken",},);
+    Uri.https(apiUrl, '/api/membershiptypes/visible'));
   if (response.statusCode == 200) {
     final list = json.decode(response.body)['listOfMembershipTypes'];
     final parsed = list.cast<Map<String, dynamic>>();

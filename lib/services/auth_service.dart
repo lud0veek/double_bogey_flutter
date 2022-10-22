@@ -8,7 +8,6 @@ import '../models/auth0_user.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-
   Auth0User? profile;
   Auth0IdToken? idToken;
   String? auth0AccessToken;
@@ -79,24 +78,32 @@ class AuthService {
   Future<String> login() async {
     try {
       final authorizationTokenRequest = AuthorizationTokenRequest(
-        AUTH0_CLIENT_ID,
-        AUTH0_REDIRECT_URI,
-        issuer: AUTH0_ISSUER,
-        scopes: ['openid', 'profile', 'offline_access', 'email',
-          'create:users read:users update:users delete:users',
-        'create:simulators read:simulators update:simulators delete:simulators',
-        'create:membershiptypes read:membershiptypes update:membershiptypes delete:membershiptypes',
-        'create:memberships read:memberships update:memberships delete:memberships',
-        'create:bookings read:bookings update:bookings delete:bookings',
-        'create:events read:events update:events delete:events',
-        'create:rooms read:rooms update:rooms delete:rooms',
-        'create:payments read:payments update:payments delete:payments'],
-        promptValues: ['login'],
-          additionalParameters: {'audience': 'https://localhost:44370'}
-      );
+          AUTH0_CLIENT_ID, AUTH0_REDIRECT_URI,
+          issuer: AUTH0_ISSUER,
+          scopes: [
+            'openid',
+            'profile',
+            'offline_access',
+            'email',
+            'create:users read:users update:users delete:users',
+            'create:simulators read:simulators update:simulators delete:simulators',
+            'create:membershiptypes read:membershiptypes update:membershiptypes delete:membershiptypes',
+            'create:memberships read:memberships update:memberships delete:memberships',
+            'create:bookings read:bookings update:bookings delete:bookings',
+            'create:events read:events update:events delete:events',
+            'create:rooms read:rooms update:rooms delete:rooms',
+            'create:registrations read:registrations update:registrations delete:registrations',
+            'create:payments read:payments update:payments delete:payments'
+          ],
+          promptValues: [
+            'login'
+          ],
+          additionalParameters: {
+            'audience': 'https://localhost:44370'
+          });
 
       final AuthorizationTokenResponse? result =
-      await appAuth.authorizeAndExchangeCode(
+          await appAuth.authorizeAndExchangeCode(
         authorizationTokenRequest,
       );
 
